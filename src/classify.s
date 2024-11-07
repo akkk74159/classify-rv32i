@@ -412,16 +412,16 @@ epilouge:
     
 # =========================================================================
 multiply:
-	li a2, 0 								# s4 = s2 * s3
-	li a4, 1
-	xor a5, a0, a1							
-	srai a5, a5, 31							
+	li a2, 0 							# store result
+	xor a5, a0, a1						# if a0 and a1 have same symbol, the symbol of a5 = 0
+	srai a5, a5, 31						# a5 stores the symbol of the result
 	
-	bltz a0, neg_a
+	bltz a0, neg_a						# if a0 < 0, turn a0 to positive	
 pos_a:
-	bltz a1, neg_b
+	bltz a1, neg_b						# if a1 < 0, turn a1 to positive	
 pos_b:
 
+	li a4, 1
 loop:
 	and a6, a1, a4
 	beqz a6, skip_add
@@ -432,8 +432,8 @@ skip_add:
 	srli a1, a1, 1
 	bnez a1, loop
 	
-	beqz a5, end
-	sub a2, x0, a2
+	beqz a5, end						
+	sub a2, x0, a2						# if a2 < 0, turn a2 to positive and return
 
 end:
 	jr ra
