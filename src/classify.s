@@ -167,6 +167,12 @@ classify:
     lw t0, 0(s3)
     lw t1, 0(s8)
     # mul a0, t0, t1 # FIXME: Replace 'mul' with your own implementation
+    
+    mv a0, t0
+    mv a1, t1
+    jal ra, multiply
+    mv a0, a2
+    
     slli a0, a0, 2
     jal malloc 
     beq a0, x0, error_malloc
@@ -206,6 +212,17 @@ classify:
     # mul a1, t0, t1 # length of h array and set it as second argument
     # FIXME: Replace 'mul' with your own implementation
     
+    addi sp, sp, -8
+    sw a0, 0(sp)
+    sw a2, 4(sp)
+    mv a0, t0
+    mv a1, t1
+    jal ra multiply
+    mv a1, a2
+    lw a0, 0(sp)
+    lw a2, 4(sp)
+    addi sp, sp, 8
+    
     jal relu
     
     lw a0, 0(sp)
@@ -227,6 +244,12 @@ classify:
     lw t0, 0(s3)
     lw t1, 0(s6)
     # mul a0, t0, t1 # FIXME: Replace 'mul' with your own implementation
+    
+    mv a0, t0
+    mv a1, t1
+    jal ra, multiply
+    mv a0, a2
+    
     slli a0, a0, 2
     jal malloc 
     beq a0, x0, error_malloc
@@ -286,8 +309,17 @@ classify:
     mv a0, s10 # load o array into first arg
     lw t0, 0(s3)
     lw t1, 0(s6)
-    mul a1, t0, t1 # load length of array into second arg
+    #mul a1, t0, t1 # load length of array into second arg
     # FIXME: Replace 'mul' with your own implementation
+    
+    addi sp, sp, 4
+    sw a0, 0(sp)
+    mv a0, t0
+    mv a1, t1
+    jal ra multiply
+    mv a1, a2
+    lw a0, 0(sp)
+    addi sp, sp, -4
     
     jal argmax
     
@@ -376,6 +408,44 @@ epilouge:
     addi sp, sp, 48
     
     jr ra
+    
+    
+# =========================================================================
+multiply:
+	li a2, 0 							# store result
+	xor a5, a0, a1						# if a0 and a1 have same symbol, the symbol of a5 = 0
+	srai a5, a5, 31						# a5 stores the symbol of the result
+	
+	bltz a0, neg_a						# if a0 < 0, turn a0 to positive	
+pos_a:
+	bltz a1, neg_b						# if a1 < 0, turn a1 to positive	
+pos_b:
+
+	li a4, 1
+loop:
+	and a6, a1, a4
+	beqz a6, skip_add
+	add a2, a2, a0
+	
+skip_add:
+	slli a0, a0, 1
+	srli a1, a1, 1
+	bnez a1, loop
+	
+	beqz a5, end						
+	sub a2, x0, a2						# if a2 < 0, turn a2 to positive and return
+
+end:
+	jr ra
+	
+neg_a:
+	sub a0, x0, a0
+	j pos_a
+neg_b:
+	sub a1, x0, a1
+	j pos_b
+	
+# =========================================================================
 
 error_args:
     li a0, 31
