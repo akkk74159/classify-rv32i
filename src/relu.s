@@ -27,9 +27,22 @@ relu:
     blt a1, t0, error     
     li t1, 0             
 
+	mv t0, a0
 loop_start:
     # TODO: Add your own implementation
+    lw t2, 0(t0)
+    bge t2, x0, loop_continue
+    li t2, 0
+    sw t2, 0(t0)
+
+loop_continue:
+	addi t0, t0, 4							
+    addi t1, t1, 1
+    bne t1, a1, loop_start
+    
+loop_end:
+    jr ra
 
 error:
     li a0, 36          
-    j exit          
+    j exit         
